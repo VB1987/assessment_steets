@@ -1,10 +1,11 @@
 <?php
 
-namespace database;
+namespace config;
 
 trait Database
 {
     /**
+     * Make connection to database
      * @return \mysqli
      */
     public static function makeConnection()

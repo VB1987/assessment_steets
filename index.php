@@ -1,5 +1,4 @@
 <?php
-
     spl_autoload_register(function ($classname) {
     //    $filename = dirname(__FILE__) . str_replace('\\', '/', $classname) . '.php';
         $filename = str_replace('\\', '/', $classname) . '.php';

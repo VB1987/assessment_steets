@@ -4,8 +4,19 @@ namespace app;
 
 class Route
 {
+    /**
+     * @var string
+     */
     public $path;
+
+    /**
+     * @var string
+     */
     public $controller;
+
+    /**
+     * @var string
+     */
     public $method;
 
     /**

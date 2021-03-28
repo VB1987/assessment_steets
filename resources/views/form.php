@@ -12,7 +12,6 @@
             </form>
 
             <table class="table" style="display: block" ></table>
-
         </div>
     </div>
 </body>

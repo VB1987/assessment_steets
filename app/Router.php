@@ -4,13 +4,23 @@ namespace app;
 
 class Router
 {
+    /**
+     * @var array
+     */
     private $routes = [];
 
+    /**
+     * @param Route $route
+     */
     public function register(Route $route)
     {
         $this->routes[] = $route;
     }
 
+    /**
+     * @param string $request
+     * @throws \ReflectionException
+     */
     public function handleRequest(string $request)
     {
         $matches = [];

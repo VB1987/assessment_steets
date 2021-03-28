@@ -2,7 +2,9 @@
 
 namespace classes\models;
 
-use database\Database;
+use config\Database;
+use config\Openssl;
+use Exception;
 
 class PrimeNumber
 {
@@ -10,26 +12,6 @@ class PrimeNumber
      * @var \mysqli
      */
     private $_connection;
-
-    /**
-     * @var string
-     */
-    private $_key;
-
-    /**
-     * @var string
-     */
-    private $_cipher = 'aes-128-gcm';
-
-    /**
-     * @var string
-     */
-    private $_iv;
-
-    /**
-     * @var string
-     */
-    private $_tag;
 
     /**
      * @var int
@@ -56,35 +38,44 @@ class PrimeNumber
      */
     public function __construct(int $year)
     {
-        // var_dump($this->encrypt());
-        // echo '<hr>';
-        // var_dump($this->decrypt($this->recordExists()));
-        // exit;
         $this->_connection = Database::makeConnection();
-        $this->_key = openssl_random_pseudo_bytes(128);
         $this->year = $year;
-        $this->prime();
-        $this->setCentury();
-        $this->setChristmas();
 
-        $record = $this->recordExists();
-        if (!$record && !empty($this->primeNumbers)) {
-            $encryptedJson = $this->encrypt();
-            $datetime = new \DateTime();
-            $now = $datetime->format('Y-m-d h:m:i');
+        $this->init();
+    }
 
-            try {
-                $stmt = $this->_connection->prepare('INSERT INTO prime_numbers (year, encrypted_json, created_at) VALUES (?, ?, ?)');
-                $stmt->bind_param('isd', $year, $encryptedJson, $now);
-                $stmt->execute();
-                $stmt->close();
-            } catch (Exception $e) {
-                throw new Exception($e->getMessage() . '  on line: ' . $e->getLine());
+    /**
+     * PrimeNumber init function
+     * @throws Exception
+     */
+    public function init()
+    {
+        $record = $this->getRecord();
+
+        if (!$record) {
+            $this->prime();
+            $this->setCentury();
+            $this->setChristmas();
+
+            if (!empty($this->primeNumbers)) {
+                $encryptedJson = $this->encrypt();
+                $datetime = new \DateTime();
+                $now = $datetime->format('Y-m-d h:m:i');
+
+                try {
+                    $stmt = $this->_connection->prepare('INSERT INTO prime_numbers (year, encrypted_json, created_at) VALUES (?, ?, ?)');
+                    $stmt->bind_param('iss', $this->year, $encryptedJson, $now);
+                    $stmt->execute();
+                    $stmt->close();
+                } catch (Exception $e) {
+                    throw new Exception($e->getMessage() . '  on line: ' . $e->getLine());
+                }
             }
+        } else {
+            $this->primeNumbers = $this->decrypt($record->encrypted_json);
+            $this->setCentury();
+            $this->setChristmas();
         }
-        var_dump($this->recordExists()->encrypted_json);
-        // var_dump(,$this->decrypt());
-        exit;
     }
 
     /**
@@ -112,7 +103,7 @@ class PrimeNumber
     }
 
     /**
-     * @return array
+     * Get first 30 prime numbers from $year down
      */
     public function prime()
     {
@@ -135,7 +126,12 @@ class PrimeNumber
         }
     }
 
-    public function recordExists()
+    /**
+     * Get record from database
+     * @return object|\stdClass
+     * @throws Exception
+     */
+    public function getRecord()
     {
         try {
             $stmt = $this->_connection->prepare('SELECT * FROM prime_numbers WHERE year = ?');
@@ -149,28 +145,28 @@ class PrimeNumber
     }
 
     /**
+     * Encrypt prime numbers
      * @return false|string
      */
     protected function encrypt()
     {
+        $openssl = Openssl::keys();
         $json = json_encode($this->primeNumbers);
 
-        if (in_array($this->_cipher, openssl_get_cipher_methods())) {
-            $ivlen = openssl_cipher_iv_length($this->_cipher);
-            $this->_iv = openssl_random_pseudo_bytes($ivlen);
-            // var_dump($ivlen, $this->_iv);
-            // exit();
-            return openssl_encrypt($json, $this->_cipher, $this->_key, $options = 0, $this->_iv, $this->_tag);
-            //store $cipher, $iv, and $tag for decryption later
+        if (in_array($openssl['cipher'], openssl_get_cipher_methods())) {
+            return openssl_encrypt($json, $openssl['cipher'], $openssl['key'], 0, $openssl['iv']);
         }
     }
 
     /**
+     * Decrypt prime numbers
      * @param string $ciphertext
-     * @return false|string
+     * @return mixed
      */
     protected function decrypt(string $ciphertext)
     {
-        return openssl_decrypt($ciphertext, $this->_cipher, $this->_key, $options = 0, $this->_iv, $this->_tag);
+        $openssl = Openssl::keys();
+
+        return json_decode(openssl_decrypt($ciphertext, $openssl['cipher'], $openssl['key'], 0, $openssl['iv']));
     }
 }

@@ -6,6 +6,10 @@ use classes\models\PrimeNumber;
 
 class PrimeNumberController
 {
+    /**
+     * Url to form
+     * @var string
+     */
     protected $form = 'resources/views/form.php';
 
     /**
@@ -17,6 +21,7 @@ class PrimeNumberController
     }
 
     /**
+     * Get prime numbers from year
      * @return false|string
      */
     public function getPrimeNumber()
@@ -25,18 +30,19 @@ class PrimeNumberController
             echo json_encode(new PrimeNumber($_GET['year']));
         } else {
             echo json_encode([
-                'message' => 'Given year not valid!'
+                'message' => 'Input year between 1000 and 9999'
             ]);
         };
     }
 
     /**
+     * Validate if year is acceptable
      * @param int $year
      * @return bool
      */
     public function validate(int $year)
     {
-        if ($year > 1000 && $year < 9999) {
+        if ($year >= 1000 && $year <= 9999) {
             return true;
         }
 

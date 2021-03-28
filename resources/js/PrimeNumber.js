@@ -1,40 +1,68 @@
 $(document).ready(function () {
 
-    $('#prime_number_form').on('submit', function () {
-        $.ajax({
-            type: 'get',
-            url: 'prime-number/get',
-            data: {
-                'year': $('input[name="year"]')[0].value
-            },
-            dataType: 'json',
-            beforeSubmit: event.preventDefault(),
-            success: function (response) {
-                if (typeof response.message === 'undefined') {
-                    $('.table').css('display', 'block');
-                    $('.table').empty();
+    /**
+     * Send ajax
+     * @param args
+     * @returns {Promise<*>}
+     */
+    async function submit(args) {
+        let result;
+        
+        try {
+            result = await $.ajax({
+                type: 'get',
+                url: 'assessment/prime-number/get',
+                data: {
+                    'year': args
+                },
+                dataType: 'json',
+            });
 
-                    let string = '';
-                    string += '<tr>';
-                    string += '<th>Priem getal</th>';
-                    string += '<th>Kerstdag</th>';
-                    string += '<th>Eeuw</th>';
-                    string += '</tr>';
-                    for (let i = 0; i < response.primeNumbers.length; i++) {
-                        string += '<tr>';
-                        string += '<td>' + response.primeNumbers[i] + '</td>'
-                        string += '<td>' + response.christmas[i] + '</td>'
-                        string += '<td>' + response.century[i] + '</td>'
-                        string += '</tr>';
-                    }
+            return result;
+        } catch (e) {
+            console.log(e.responseText)
+            alert(e.responseText);
+        }
+    }
 
-                    $('.table').append(string);
-                }
-            },
-            fail: function (e) {
-                alert('failed: ' + e.message);
+    /**
+     * Show results in table
+     * @param response
+     */
+    let showResults = function (response) {
+        if (typeof response.message !== 'undefined') {
+            alert(response.message);
+        }
+
+        if (typeof response.primeNumbers !== 'undefined') {
+            $('.table').css('display', 'block');
+            $('.table').empty();
+
+            let string = '';
+            string += '<tr>';
+            string += '<th>Priem getal</th>';
+            string += '<th>Kerstdag</th>';
+            string += '<th>Eeuw</th>';
+            string += '</tr>';
+            for (let i = 0; i < response.primeNumbers.length; i++) {
+                string += '<tr>';
+                string += '<td>' + response.primeNumbers[i] + '</td>'
+                string += '<td>' + response.christmas[i] + '</td>'
+                string += '<td>' + response.century[i] + '</td>'
+                string += '</tr>';
             }
-        });
-    });
 
+            $('.table').append(string);
+        }
+    }
+
+    /**
+     * On submit
+     */
+    $('#prime_number_form').on('submit', function () {
+        event.preventDefault();
+        let year = $('input[name="year"]')[0].value;
+        
+        submit(year).then( (response) => showResults(response));
+    });
 });
