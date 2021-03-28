@@ -56,23 +56,35 @@ class PrimeNumber
      */
     public function __construct(int $year)
     {
+        // var_dump($this->encrypt());
+        // echo '<hr>';
+        // var_dump($this->decrypt($this->recordExists()));
+        // exit;
         $this->_connection = Database::makeConnection();
         $this->_key = openssl_random_pseudo_bytes(128);
         $this->year = $year;
-        $this->recordExists();
         $this->prime();
         $this->setCentury();
         $this->setChristmas();
 
-        if (!empty($this->primeNumbers)) {
+        $record = $this->recordExists();
+        if (!$record && !empty($this->primeNumbers)) {
             $encryptedJson = $this->encrypt();
+            $datetime = new \DateTime();
+            $now = $datetime->format('Y-m-d h:m:i');
 
-
-//            $stmt = $this->_connection->prepare('INSERT INTO prime_numbers (year, encrypted_json) VALUES (?, ?)');
-//            $stmt->bind_param('ss', $year, $encryptedJson);
-//            $stmt->execute();
-//            $stmt->close();
+            try {
+                $stmt = $this->_connection->prepare('INSERT INTO prime_numbers (year, encrypted_json, created_at) VALUES (?, ?, ?)');
+                $stmt->bind_param('isd', $year, $encryptedJson, $now);
+                $stmt->execute();
+                $stmt->close();
+            } catch (Exception $e) {
+                throw new Exception($e->getMessage() . '  on line: ' . $e->getLine());
+            }
         }
+        var_dump($this->recordExists()->encrypted_json);
+        // var_dump(,$this->decrypt());
+        exit;
     }
 
     /**
@@ -125,11 +137,15 @@ class PrimeNumber
 
     public function recordExists()
     {
-        $stmt = $this->_connection->prepare('SELECT * FROM prime_numbers WHERE year = ?');
-        $stmt->bind_param('s', $this->year);
-        $stmt->execute();
-        var_dump($stmt->get_result());
-        exit();
+        try {
+            $stmt = $this->_connection->prepare('SELECT * FROM prime_numbers WHERE year = ?');
+            $stmt->bind_param('i', $this->year);
+            $stmt->execute();
+
+            return $stmt->get_result()->fetch_object();
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage() . '  on line: ' . $e->getLine());
+        }
     }
 
     /**
@@ -142,6 +158,8 @@ class PrimeNumber
         if (in_array($this->_cipher, openssl_get_cipher_methods())) {
             $ivlen = openssl_cipher_iv_length($this->_cipher);
             $this->_iv = openssl_random_pseudo_bytes($ivlen);
+            // var_dump($ivlen, $this->_iv);
+            // exit();
             return openssl_encrypt($json, $this->_cipher, $this->_key, $options = 0, $this->_iv, $this->_tag);
             //store $cipher, $iv, and $tag for decryption later
         }

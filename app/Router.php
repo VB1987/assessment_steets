@@ -1,5 +1,7 @@
 <?php
 
+namespace app;
+
 class Router
 {
     private $routes = [];
@@ -16,7 +18,7 @@ class Router
             if (preg_match('/' . str_replace('/', '\/', $route->path) . '/', $request, $matches)) {
                 array_shift($matches);
 
-                $class = new ReflectionClass($route->controller);
+                $class = new \ReflectionClass($route->controller);
                 $method = $class->getMethod($route->method);
                 $instance = $class->newInstance(...$matches);
                 $method->invoke($instance);

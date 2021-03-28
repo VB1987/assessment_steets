@@ -1,4 +1,4 @@
-<?php require_once 'index.php'; ?>
+<?php require_once 'main.php'; ?>
 <body>
     <div id="container">
         <div class="header">

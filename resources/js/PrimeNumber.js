@@ -3,7 +3,7 @@ $(document).ready(function () {
     $('#prime_number_form').on('submit', function () {
         $.ajax({
             type: 'get',
-            url: 'assessment/prime-number/get',
+            url: 'prime-number/get',
             data: {
                 'year': $('input[name="year"]')[0].value
             },
@@ -29,13 +29,12 @@ $(document).ready(function () {
                     }
 
                     $('.table').append(string);
-                } else {
-                    alert(response.message);
                 }
             },
-            fail: function (data) {
-                alert('failed');
+            fail: function (e) {
+                alert('failed: ' + e.message);
             }
-        })
+        });
     });
+
 });

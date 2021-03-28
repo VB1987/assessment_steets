@@ -9,8 +9,8 @@
         }
     });
 
-    $router = new Router();
-    $router->register(new Route('assessment/prime-number/get', '\classes\controllers\PrimeNumberController', 'getPrimeNumber'));
-    $router->register(new Route('assessment', '\classes\controllers\PrimeNumberController', 'show'));
+    $router = new app\Router();
+    $router->register(new app\Route('assessment/prime-number/get', '\classes\controllers\PrimeNumberController', 'getPrimeNumber'));
+    $router->register(new app\Route('assessment', '\classes\controllers\PrimeNumberController', 'show'));
     $router->handleRequest($_SERVER['REQUEST_URI']);
 ?>

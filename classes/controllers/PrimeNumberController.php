@@ -25,7 +25,7 @@ class PrimeNumberController
             echo json_encode(new PrimeNumber($_GET['year']));
         } else {
             echo json_encode([
-                'message' => 'Given year nog valid!'
+                'message' => 'Given year not valid!'
             ]);
         };
     }
